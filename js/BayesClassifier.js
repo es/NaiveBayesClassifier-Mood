@@ -13,6 +13,7 @@ var BayesClassifier = function () {
 									.replace(':','')
 									.replace(';','')
 									.split(' ');
+		/*var temp = doc.toLowerCase().split('');*/
 		for (var i = 0; i < temp.length; i++) {
 			for (var x = temp.length - 1; x > i; x--) {
 				if (temp[i] === temp[x])
@@ -44,6 +45,7 @@ BayesClassifier.prototype.train = function(label, doc) {
 };
 
 BayesClassifier.prototype.classify = function(doc) {
+	console.log('this.labels:', this.labels);
 	var wordsArr = this.tokenize(doc);
 	var logSum = 0;
 	var probLabel = {};
@@ -59,10 +61,16 @@ BayesClassifier.prototype.classify = function(doc) {
 				var pWordOccurInLabelDoc = wordOccurences / label.docNum;
 				var pWordOccurInNonLabelDoc = (this.words[wordsArr[i]] - wordOccurences) / (this.docNum - label.docNum);
 				var pDocIsLabelGivenWord = pWordOccurInLabelDoc / (pWordOccurInLabelDoc + pWordOccurInNonLabelDoc);
-				logSum += Math.log(pDocIsLabelGivenWord) - Math.log(1 - pDocIsLabelGivenWord + pDocIsLabelGivenWord);
+				pDocIsLabelGivenWord = ( (1 * 0.5) + (wordOccurences * pDocIsLabelGivenWord) ) / ( 1 + wordOccurences );
+				if (pDocIsLabelGivenWord === 1 || pDocIsLabelGivenWord === 0)
+					 spDocIsLabelGivenWord = pDocIsLabelGivenWord === 1 ? 0.99 : 0.01;
+				//logSum += Math.log(pDocIsLabelGivenWord) - Math.log(1 - pDocIsLabelGivenWord + pDocIsLabelGivenWord);
+				logSum += (Math.log(1 - pDocIsLabelGivenWord) - Math.log(pDocIsLabelGivenWord));
 			}
 		}
-		probLabel[currentLabel] = Math.exp(logSum);
+		console.log(Math.exp(logSum));
+		// probLabel[currentLabel] = Math.exp(logSum);
+		probLabel[currentLabel] = 1 / ( 1 + Math.exp(logSum) );
 	}
 	return probLabel;
 };
